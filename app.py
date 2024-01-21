@@ -27,13 +27,13 @@ class Graph:
             self.people[name1].add_friend(name2)
             self.people[name2].add_friend(name1)
         else:
-            raise Exception("Both people must be added to the graph before creating a friendship.")
+            raise Exception(f"One or both of the people {name1} or {name2} have not been added to the graph.")
 
     def add_possession(self, name, item):
         if name in self.people:
             self.people[name].add_possession(item)
         else:
-            raise Exception("Person must be added to the graph before assigning possessions.")
+            raise Exception(f"Person {name} has not been added to the graph before assigning possessions.")
 
 # Initialize the graph
 graph = Graph()
@@ -49,16 +49,17 @@ def find_path_to_borrow(graph, start_name, item):
         
         if person_name not in visited:
             visited.add(person_name)
-            person = graph.people[person_name]
+            person = graph.people.get(person_name)
             
-            if item in person.possessions:
+            if person and item in person.possessions:
                 return path  # Return the path to the person who has the item
             
-            for friend in person.friends:
-                if friend not in visited:
-                    new_path = list(path)
-                    new_path.append(friend)
-                    queue.append(new_path)
+            if person:
+                for friend in person.friends:
+                    if friend not in visited:
+                        new_path = list(path)
+                        new_path.append(friend)
+                        queue.append(new_path)
     
     return None  # If there is no path to someone with the item
 
@@ -97,33 +98,33 @@ def get_borrow_path():
     else:
         return jsonify({"error": "No path found to borrow the item"}), 404
 
-# This would run your Flask app on localhost, port 5000
-# app.run(debug=True)
-
-# Main execution (for demonstration, add people, friendships, and possessions)
+# Main execution
 if __name__ == '__main__':
     # Add people to the graph
-    graph.add_person('Kamil')
-    graph.add_person('Magda')
-    graph.add_person('Ewa')
-    graph.add_person('Piotr')
-    graph.add_person('Nikodem')
-    graph.add_person('Mikolaj')
-    graph.add_person('Liliana')
-    graph.add_person('Daniel')
+    people = ['Kamil', 'Magda', 'Ewa', 'Piotr', 'Nikodem', 'Mikolaj', 'Liliana', 'Daniel']
+    for person in people:
+        graph.add_person(person)
+
     # Add friendships
-    graph.add_friendship('Kamil', 'Magda', 'Piotr', 'Daniel')
-    graph.add_friendship('Magda', 'Kamil', 'Liliana')
-    graph.add_friendship('Ewa', 'Magda', 'Liliana', 'Daniel')
-    graph.add_friendship('Piotr', 'Kamil', 'Liliana')
-    graph.add_friendship('Nikodem', 'Mikołaj', 'Daniel')
-    graph.add_friendship('Mikolaj', 'Daniel')
-    graph.add_friendship('Liliana', 'Magda', 'Ewa')
-    graph.add_friendship('Daniel', 'Kamil', 'Ewa', 'Mikolaj')
+    friendships = [
+        ('Kamil', 'Magda'), ('Kamil', 'Piotr'), ('Kamil', 'Daniel'), 
+        ('Magda', 'Liliana'), ('Ewa', 'Magda'), ('Ewa', 'Liliana'), 
+        ('Ewa', 'Daniel'), ('Piotr', 'Liliana'), ('Nikodem', 'Mikolaj'), 
+        ('Nikodem', 'Daniel'), ('Mikolaj', 'Daniel')
+    ]
+    for friend1, friend2 in friendships:
+        graph.add_friendship(friend1, friend2)
+
     # Add possessions
-    graph.add_possession('Magda', 'kamera')
-    graph.add_possession('Piotr', 'kamera')
-    graph.add_possession('Mikolaj', 'kamera')
-    graph.add_possession('Liliana', 'kamera')
-    graph.add_possession('Piotr', 'statyw')
-    # app.run(debug=True)
+    possessions = {
+        'Magda': ['kamera'], 
+        'Piotr': ['kamera', 'statyw'], 
+        'Mikolaj': ['kamera'], 
+        'Liliana': ['kamera']
+    }
+    for person, items in possessions.items():
+        for item in items:
+            graph.add_possession(person, item)
+
+    # Start the Flask app
+    app.run(debug=True)
